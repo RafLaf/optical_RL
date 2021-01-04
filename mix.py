@@ -66,7 +66,7 @@ start_time = time.time()
 for i_episode in range(2):
     observation = env.reset()
     for t in range(10):
-        #env.render()     #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
+        env.render()     #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
         print(i_episode,t,observation.shape)
         action = env.action_space.sample()
         observation, reward, done, info = env.step(action)
