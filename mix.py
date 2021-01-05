@@ -6,6 +6,8 @@ import torch.nn.functional as F
 import torch
 import numpy as np
 import scipy.sparse as sc
+from scipy.stats import multivariate_normal
+import cma
 
 class Net(nn.Module):
     def __init__(self,rho):
@@ -60,31 +62,60 @@ class Net(nn.Module):
 
     
 net = Net(0.9)
+def launch_scenarios(Wout):
+	reward_list=[]
+	env = gym.make('CarRacing-v0')
+	start_time = time.time()
+	for i_episode in range(1):
+		observation = env.reset()
+		reward_sum=0
+		feature=torch.from_numpy(np.array(1024))
+		for t in range(100):
+			env.render()     #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
+			print(i_episode,t,observation.shape)
+			
+			#generation d'action par WOUT et features
+			a1=max(min((np.sum(np.array(feature.detach().numpy())*Wout[0:1024])+Wout[1024])/1025,1),-1)
+			a2=max(min((np.sum(np.array(feature.detach().numpy())*Wout[1025:2049])+Wout[2049])/1025,1),-1)
+			a3=max(min((np.sum(np.array(feature.detach().numpy())*Wout[2050:3074])+Wout[3074])/1025,1),-1)
+			action=[a1,a2,a3]
+			
+			
+			#action = env.action_space.sample()
+			observation, reward, done, info = env.step(action)
+			obs=np.array(observation)
+			obs=np.moveaxis(obs,[2],[0])
+			obs=np.array([obs])
+			obs=torch.from_numpy(obs)
+			feature=net.RCstep(obs.float(),0.5)
+			reward_sum+=reward
+			
+			print("len,",len(feature))
+			print("action: ",action)
+			if done:
+				print("Episode finished after {} timesteps".format(t+1))
+				break
+		print("sum reward:",reward_sum)
+		reward_list.append(reward_sum)
+	print(time.time()-start_time)
+	env.close()
 
-env = gym.make('CarRacing-v0')
-start_time = time.time()
-for i_episode in range(2):
-    observation = env.reset()
-    for t in range(10):
-        env.render()     #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
-        print(i_episode,t,observation.shape)
-        action = env.action_space.sample()
-        observation, reward, done, info = env.step(action)
-        obs=np.array(observation)
-        obs=np.moveaxis(obs,[2],[0])
-        obs=np.array([obs])
-        obs=torch.from_numpy(obs)
-        feature=net.RCstep(obs.float(),0.5)
-        print(feature)
-        if done:
-            print("Episode finished after {} timesteps".format(t+1))
-            break
-print(time.time()-start_time)
-env.close()
 
+µ=np.random.random(1024)
+C=np.identity(1024)
 
-
+def progtot():
+	for iterate in range(2):
+		µ=np.array([0 for k in range(1025*3)])
+		C=np.identity(1025*3)
+		rho=0.5
+		rng = np.random.default_rng()
+		Wout=rng.multivariate_normal(µ,C*rho)
+		launch_scenarios(Wout)
+		print(Wout)
+"""
 A=np.random.random((1,3,96,96))
 B = torch.from_numpy(A)
 net = Net(0.9)
 net.RCstep(B.float(),0.5)
+"""
