@@ -9,7 +9,7 @@ import scipy.sparse as sc
 from scipy.stats import multivariate_normal
 import cma
 
-dtype = torch.cuda.FloatTensor
+dtype = torch.long
 
 class Net(nn.Module):
     def __init__(self,rho):
@@ -150,7 +150,7 @@ def progtot():
         sig=0.5
         #rng = np.random.default_rng()
         #Wout=rng.multivariate_normal(mu,C*sig)
-        Wout=np.random.multivariate_normal(mu,sig*C)
+        #Wout=np.random.multivariate_normal(mu,sig*C)
         print('ready to launch')
         #launch_scenarios(Wout)
         #cma.evolution_strategy(launch_scenarios,mu,5,options=cma.evolution_strategy.cma_default_options_(),args=())
