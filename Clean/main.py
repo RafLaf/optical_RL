@@ -13,21 +13,19 @@ import sys
 import os
 
 #dtype = torch.long
-dtype1 = torch.cuda.FloatTensor
+dtype = torch.cuda.FloatTensor
 torch.device('cuda')
 
-net1=initnet(0.9,dtype1)
+
 
 def progtot():
-    for iterate in range(1):
-        global dtype
-        env1 = gym.make('CarRacing-v0')
-        mu=np.zeros(3*1025)
-        CMA=cma.evolution_strategy
-        sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.01,options={'ftarget':-50000,'maxiter':10,'popsize':2})
-        print(sol,es)
-        env1.close()
-        return(es)
+    global dtype
+    mu=np.zeros(3*1025)
+    CMA=cma.evolution_strategy
+    sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.01,options={'ftarget':-50000,'maxiter':10,'popsize':2})
+    print(sol,es)
+    env1.close()
+    return(es)
 
 
 if __name__ == "__main__":

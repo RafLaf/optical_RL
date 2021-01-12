@@ -34,6 +34,7 @@ def launch_scenarios(Wout):
     reward_list=[]
     start_time = time.time()
     nbep=5
+    max_reward=0
     for i_episode in range(nbep):
         observation = env.reset()
         #env.viewer.close()
