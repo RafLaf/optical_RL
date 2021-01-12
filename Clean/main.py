@@ -18,13 +18,12 @@ torch.device('cuda')
 
 
 
-def progtot():
+def progtot(mu):
     global dtype
-    mu=np.zeros(3*1025)
     CMA=cma.evolution_strategy
-    sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.01,options={'ftarget':-50000,'maxiter':10,'popsize':2})
+    sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.05,options={'ftarget':-50000,'maxiter':100000,'popsize':5})
     print(sol,es)
-    env1.close()
+    env.close()
     return(es)
 
 
@@ -48,9 +47,16 @@ if __name__ == "__main__":
         print('creating net')
         net=initnet(0.9,dtype)
         torch.save(net, 'model.pt')
+    try:
+        mu=np.load('mu.npy',allow_pickle=True)
+        print('loaded W')
+    except FileNotFoundError:
+        print('not found creating mu')
+        mu=np.zeros(3*1025)
+        np.save('mu.npy',mu)
     utils.network.dtype=dtype
     utils.game.dtype=dtype
     utils.network.W=W
     utils.game.env=env
     utils.game.net=net
-    progtot()
+    progtot(mu)

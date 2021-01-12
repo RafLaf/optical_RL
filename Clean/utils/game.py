@@ -35,12 +35,13 @@ def launch_scenarios(Wout):
     start_time = time.time()
     nbep=5
     max_reward=0
+    display=True
     for i_episode in range(nbep):
         observation = env.reset()
         #env.viewer.close()
         reward_sum=0
         feature=torch.ones(1025,dtype=torch.float64)
-        for t in range(500):
+        for t in range(5000000):
             '''
             if  show==toshow:
                 env.render()
@@ -49,6 +50,12 @@ def launch_scenarios(Wout):
                 show+=1
 
             '''
+            
+            if  i_episode==nbep-1 and display==True:
+                env.render()
+                
+            
+            
             action=torch.clip(torch.matmul(Wout,feature),-1,1)
             action=action.detach().numpy()
             observation, reward, done, info = env.step(action)
@@ -59,7 +66,7 @@ def launch_scenarios(Wout):
             obs.type(dtype)
             feature[:-1]=net.RCstep(obs.float(),0.5,1e-6)
             reward_sum+=reward
-            if done:
+            if done and t<998 and reward_sum > 900:
                 print("Episode finished after {} timesteps".format(t+1))
                 reward_sum+=50000000
                 break
