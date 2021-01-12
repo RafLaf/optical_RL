@@ -22,7 +22,7 @@ import os
 #----------------------
 
 show=0
-toshow=1000
+toshow=5
 
 
 def launch_scenarios(Wout):
@@ -36,13 +36,14 @@ def launch_scenarios(Wout):
     nbep=5
     for i_episode in range(nbep):
         observation = env.reset()
+        #env.viewer.close()
         reward_sum=0
         feature=torch.ones(1025,dtype=torch.float64)
         for t in range(500):
             '''
             if  show==toshow:
                 env.render()
-                show =0 #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
+                show=0 #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
             else:
                 show+=1
 
@@ -59,10 +60,15 @@ def launch_scenarios(Wout):
             reward_sum+=reward
             if done:
                 print("Episode finished after {} timesteps".format(t+1))
+                reward_sum+=50000000
+                break
+            if reward_sum > max_reward:
+                max_reward = reward_sum
+            elif max_reward-reward_sum > 15:
                 break
         print("sum reward:",reward_sum)
         reward_list.append(reward_sum)
-    env.close()
+    #env.close()
     return -sum(reward_list)/nbep    #CMA es minimzes
 
 
