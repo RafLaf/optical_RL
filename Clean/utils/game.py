@@ -6,7 +6,7 @@ import torch
 import numpy as np
 import scipy.sparse as sc
 
-dtype = torch.long
+#dtype = torch.long
 #dtype = torch.cuda.FloatTensor
 
 #from network import initnet 
@@ -20,28 +20,41 @@ dtype = torch.long
 
  
 show=0
-toshow=1000
+toshow=5
 
-def launch_scenarios(Wout,net):
+def launch_scenarios(Wout,net,env,dtype):
+    print("dtype: ",dtype)
     Wout=np.reshape(Wout,(3,int(Wout.size/3)))
     Wout=torch.from_numpy(Wout)
     Wout.type(dtype)
     global show
     reward_list=[]
-    env = gym.make('CarRacing-v0')
+    #env = gym.make('CarRacing-v0')
+    #env.viewer = None
+    #if env.viewer: 
+    #    env.viewer.close() 
     start_time = time.time()
     nbep=5
     for i_episode in range(nbep):
         observation = env.reset()
+        #env.viewer.close()
         reward_sum=0
         feature=torch.ones(1025,dtype=torch.float64)
-        for t in range(500):
+        max_reward=0
+        for t in range(1000000):
+            
+            """
             if  show==toshow:
                 env.render()
-                show =0 #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
+                show=0 #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
             else:
                 show+=1
-            action=torch.clip(torch.matmul(Wout,feature),-1,1)
+            """
+            if i_episode==nbep-1:
+                env.render()
+                
+            #action=torch.clip(torch.matmul(Wout,feature),-1,1)
+            action=2*torch.sigmoid(torch.matmul(Wout,feature))-1
             action=action.detach().numpy()
             observation, reward, done, info = env.step(action)
             obs=np.array(observation)
@@ -53,10 +66,15 @@ def launch_scenarios(Wout,net):
             reward_sum+=reward
             if done:
                 print("Episode finished after {} timesteps".format(t+1))
+                reward_sum+=50000000
+                break
+            if reward_sum > max_reward:
+                max_reward = reward_sum
+            elif max_reward-reward_sum > 15:
                 break
         print("sum reward:",reward_sum)
         reward_list.append(reward_sum)
-    env.close()
+    #env.close()
     return -sum(reward_list)/nbep    #CMA es minimzes
 
 
