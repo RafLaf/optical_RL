@@ -1,14 +1,12 @@
 import time
-import gym
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
 import numpy as np
 import scipy.sparse as sc
-from scipy.stats import multivariate_normal
+import sys
+import os
 
-dtype = torch.long
-#dtype = torch.cuda.FloatTensor
 
 def initnet(rho,dtype):
     return Net(rho,dtype)
@@ -27,19 +25,11 @@ class Net(nn.Module):
         nn.init.normal_(self.conv2.weight)
         self.conv3 = nn.Conv2d(64, 128, 5)
         nn.init.normal_(self.conv3.weight)
-        try : 
-            W=np.load('W.npy',allow_pickle=True)
-        except:
-            print('not found')
-            self.Win=nn.Linear(512,512)
-            self.W=sc.random(Nr,Nr,density=float(D/Nr))
-            self.W=rho/max(abs(np.linalg.eigvals(self.W.A)))*self.W
-            self.W=(2*self.W-(self.W!=0))
-            np.save('W.npy',W)
-        self.W=torch.from_numpy(self.W.A)
+        self.Win=nn.Linear(512,512)
+        self.W=W
+        self.W=torch.from_numpy(self.W)
         self.W.type(dtype)
         self.r=torch.zeros(512)
-
     def forward(self, x):
         x=self.pool3(x)
         x = self.pool(self.conv1(x))
@@ -61,7 +51,20 @@ class Net(nn.Module):
 
 
 if __name__ == "__main__":
+    dtype = torch.long
+    #dtype = torch.cuda.FloatTensor
+    try:
+        W=np.load('W.npy',allow_pickle=True)
+        print('loaded W')
+    except FileNotFoundError:
+        print('not found creating W')
+        W=sc.random(Nr,Nr,density=float(D/Nr))
+        W=rho/max(abs(np.linalg.eigvals(W.A)))*W
+        W=(2*W-(W!=0))
+        W=W.A
+        np.save('W.npy',W)
     A=np.random.random((1,3,96,96))
     B = torch.from_numpy(A)
     net=Net(0.9,dtype)
+    W=net.W
     print(net.RCstep(B.float(),0.5,1e-6))

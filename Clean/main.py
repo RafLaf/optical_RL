@@ -7,8 +7,11 @@ import numpy as np
 import scipy.sparse as sc
 from scipy.stats import multivariate_normal
 import cma
-from utils.network import initnet
-from utils.game import launch_scenarios
+import utils.network
+import utils.game
+import sys
+import os
+
 
 dtype = torch.long
 #dtype = torch.cuda.FloatTensor
@@ -20,18 +23,34 @@ def progtot():
     for iterate in range(1):
         mu=np.zeros(3*1025)
         CMA=cma.evolution_strategy
-        sol,es=CMA.fmin2(launch_scenarios,mu,0.3,args={net,},options={'ftarget':-50000,'maxiter':10000,'popsize':15})
-        #env.close()
-        #sol,es=CMA.fmin2(launch_scenarios,es.result[5],es.result[6],options={'ftarget':-10,'maxiter':1})
+        sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.01,options={'ftarget':-50000,'maxiter':10,'popsize':2})
         print(sol,es)
         return(es)
 
 
 if __name__ == "__main__":
+    env = gym.make('CarRacing-v0')
+    try:
+        W=np.load('W.npy',allow_pickle=True)
+        print('loaded W')
+    except FileNotFoundError:
+        print('not found creating W')
+        W=sc.random(Nr,Nr,density=float(D/Nr))
+        W=rho/max(abs(np.linalg.eigvals(W.A)))*W
+        W=(2*W-(W!=0))
+        W=W.A
+        np.save('W.npy',W)
     try :
-    model = torch.load(model.pt)
-    model.eval()
-except:
-    net=initnet(0.9,dtype)
-    torch.save(net, 'model.pt')
+        net = torch.load('model.pt')
+        net.eval()
+        print('loaded net')
+    except FileNotFoundError:
+        print('creating net')
+        net=initnet(0.9,dtype)
+        torch.save(net, 'model.pt')
+    utils.network.dtype=dtype
+    utils.game.dtype=dtype
+    utils.network.W=W
+    utils.game.env=env
+    utils.game.net=net
     progtot()
