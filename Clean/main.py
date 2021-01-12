@@ -31,4 +31,10 @@ def progtot():
 
 
 if __name__ == "__main__":
+    try :
+    model = torch.load(model.pt)
+    model.eval()
+except:
+    net=initnet(0.9,dtype)
+    torch.save(net, 'model.pt')
     progtot()
