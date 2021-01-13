@@ -8,11 +8,11 @@ import sys
 import os
 
 
-def initnet(rho,dtype):
-    return Net(rho,dtype)
+def initnet(rho,dtype,w):
+    return Net(rho,dtype,w)
 
 class Net(nn.Module):
-    def __init__(self,rho,dtype):
+    def __init__(self,rho,dtype,W):
         super(Net, self).__init__()
         Nr,D=512,15
         self.pool3 = nn.MaxPool2d(2, 2)

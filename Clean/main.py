@@ -21,21 +21,22 @@ torch.device('cuda')
 def progtot(mu):
     global dtype
     CMA=cma.evolution_strategy
-    sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.05,options={'ftarget':-50000,'maxiter':100000,'popsize':5})
+    sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.5,options={'ftarget':-50000,'maxiter':100000,'popsize':5})
     print(sol,es)
     env.close()
     return(es)
 
 
 if __name__ == "__main__":
-    env = gym.make('CarRacing-v0')
+    
     try:
         W=np.load('W.npy',allow_pickle=True)
         print('loaded W')
     except FileNotFoundError:
         print('not found creating W')
+        Nr,D=512,15
         W=sc.random(Nr,Nr,density=float(D/Nr))
-        W=rho/max(abs(np.linalg.eigvals(W.A)))*W
+        W=0.9/max(abs(np.linalg.eigvals(W.A)))*W
         W=(2*W-(W!=0))
         W=W.A
         np.save('W.npy',W)
@@ -45,11 +46,11 @@ if __name__ == "__main__":
         print('loaded net')
     except FileNotFoundError:
         print('creating net')
-        net=initnet(0.9,dtype)
+        net=utils.network.initnet(0.9,dtype,W)
         torch.save(net, 'model.pt')
     try:
         mu=np.load('mu.npy',allow_pickle=True)
-        print('loaded W')
+        print('loaded mu')
     except FileNotFoundError:
         print('not found creating mu')
         mu=np.zeros(3*1025)
@@ -57,6 +58,6 @@ if __name__ == "__main__":
     utils.network.dtype=dtype
     utils.game.dtype=dtype
     utils.network.W=W
-    utils.game.env=env
+    #utils.game.env=env
     utils.game.net=net
     progtot(mu)

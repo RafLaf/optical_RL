@@ -36,6 +36,7 @@ def launch_scenarios(Wout):
     nbep=5
     max_reward=0
     display=True
+    env = gym.make('CarRacing-v0')
     for i_episode in range(nbep):
         observation = env.reset()
         #env.viewer.close()
@@ -76,7 +77,7 @@ def launch_scenarios(Wout):
                 break
         print("sum reward:",reward_sum)
         reward_list.append(reward_sum)
-    #env.close()
+    env.close()
     return -sum(reward_list)/nbep    #CMA es minimzes
 
 
