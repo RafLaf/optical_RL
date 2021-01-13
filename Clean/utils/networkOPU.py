@@ -8,41 +8,40 @@ import scipy.sparse as sc
 import sys
 import os
 
-def typedevice(tensor,typ,devi):
-    return tensor.to(device=devi,dtype=typ)
 
-def initnet(rho,dtype,w):
-    return Net(rho,dtype,w)
+def initnet(rho,dtype):
+    return Net(rho,dtype)
 
 class Net(nn.Module):
-    def __init__(self,rho,dtype,W):
+    def __init__(self,rho,dtype):
         super(Net, self).__init__()
         Nr,D=512,15
         self.pool3 = nn.MaxPool2d(2, 2)
-        #self.pool3=typedevice(self.pool3,dtype,device)
+        self.pool3.type(dtype)
         self.conv1 = nn.Conv2d(3, 32, 5)              #convolution avec 3 channel entrée (RVB); 32 channel de sortie, kernel de 5*5 (pas sûr de moi pour le 5*5)
         nn.init.normal_(self.conv1.weight)            #normal distribution
         self.pool = nn.MaxPool2d(2, 2)
-        #self.pool=typedevice(self.pool,dtype,device)
+        self.pool.type(dtype)
         self.conv2 = nn.Conv2d(32, 64, 5)
         nn.init.normal_(self.conv2.weight)
         self.conv3 = nn.Conv2d(64, 128, 5)
         nn.init.normal_(self.conv3.weight)
         self.Win=nn.Linear(512,512)
-        #self.Win=typedevice(self.Win,dtype,device)
         self.W=W
         self.W=torch.from_numpy(self.W)
-        self.W=typedevice(self.W,dtype,device)
+        self.W.type(dtype)
         self.r=torch.zeros(512)
     def forward(self, x):
         x=self.pool3(x)
         x = self.pool(self.conv1(x))
         x = self.pool(self.conv2(x))
         x = self.pool(self.conv3(x))
-        x=torch.reshape(x,(512,))
+        s=x.size()
+        x=torch.reshape(x,(s[1]*s[2]*s[3],))
         return x
     def RCstep(self,x,aleak,gamma):
         a=gamma*self.forward(x)
+        a.type(dtype)
         v1=torch.matmul(self.r,self.W.float())
         v2=self.Win(a)
         temp_r=(1-aleak)*self.r+aleak*torch.tanh(v1+v2)
@@ -50,27 +49,36 @@ class Net(nn.Module):
         self.r=torch.reshape(self.r,(512,))
         a=torch.reshape(a,(512,))
         return torch.cat((self.r,a))
+    def binarize(self,x):
+        std,m=torch.std(x),torch.mean(x)
+        h=(x-m)/std
+        h=torch.heaviside(h,h)
+        h=h.type(dtype=torch.uint8)
+        return h
+    def RCstepOPU(self,x,aleak,gamma):
+        a=gamma*self.forward(x)
+        a=self.binarize(a)
+        transform_1d
 
 if __name__ == "__main__":
     dtype = torch.long
     #dtype = torch.cuda.FloatTensor
-    device = 'cpu'
-    #device= 'cuda'
     try:
         W=np.load('W.npy',allow_pickle=True)
         print('loaded W')
-        rho=0.9
-        net=Net(rho,dtype)
     except FileNotFoundError:
-        rho=0.9
-        Nr,D=512,15
+        print('not found creating W')
         W=sc.random(Nr,Nr,density=float(D/Nr))
         W=rho/max(abs(np.linalg.eigvals(W.A)))*W
         W=(2*W-(W!=0))
         W=W.A
-        net=Net(rho,dtype)
-        print('not found W creating W')
         np.save('W.npy',W)
     A=np.random.random((1,3,96,96))
     B = torch.from_numpy(A)
+    net=Net(0.9,dtype)
+    W=net.W
     print(net.RCstep(B.float(),0.5,1e-6))
+    y=2*np.random.random((10,))+5
+    y=torch.from_numpy(y)
+    print(y)
+    print(net.binarize(y))

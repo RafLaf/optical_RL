@@ -17,6 +17,9 @@ dtype = torch.cuda.FloatTensor
 torch.device('cuda')
 
 
+def typedevice(tensor,typ,devi):
+    return tensor.to(device=devi,dtype=typ)
+
 
 def progtot():
     global dtype
@@ -52,9 +55,11 @@ def progtot():
     env.close()
     return(es)
 
-
 if __name__ == "__main__":
-    
+    dtype = torch.long
+    #dtype = torch.cuda.FloatTensor
+    device = 'cpu'
+    #device= 'cuda'
     try:
         W=np.load('W.npy',allow_pickle=True)
         print('loaded W')
@@ -66,6 +71,12 @@ if __name__ == "__main__":
         W=(2*W-(W!=0))
         W=W.A
         np.save('W.npy',W)
+    utils.network.dtype=dtype
+    utils.game.dtype=dtype
+    utils.network.W=W
+    utils.game.env=env
+    utils.network.device=device
+    utils.game.device=device
     try :
         net = torch.load('model.pt')
         net.eval()
@@ -87,3 +98,5 @@ if __name__ == "__main__":
     #utils.game.env=env
     utils.game.net=net
     progtot()
+
+
