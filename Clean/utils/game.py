@@ -57,8 +57,14 @@ def launch_scenarios(Wout):
                 
             
             
-            action=torch.clip(torch.matmul(Wout,feature),-1,1)
-            action=action.detach().numpy()
+            #action=torch.clip(torch.matmul(Wout,feature),-1,1)
+            #action=action.detach().numpy()
+            
+            a1=max(min((np.sum(np.array(feature.detach().numpy())*Wout[0:1024])+Wout[1024])/1025,1),-1)
+            a2=max(min((np.sum(np.array(feature.detach().numpy())*Wout[1025:2049])+Wout[2049])/1025,1),-1)
+            a3=max(min((np.sum(np.array(feature.detach().numpy())*Wout[2050:3074])+Wout[3074])/1025,1),-1)
+            action=[a1,a2,a3]
+            
             observation, reward, done, info = env.step(action)
             obs=np.array(observation)
             obs=np.moveaxis(obs,[2],[0])
