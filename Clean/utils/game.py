@@ -42,7 +42,8 @@ def launch_scenarios(Wout):
         #env.viewer.close()
         reward_sum=0
         feature=torch.zeros(1025,dtype=dtype,device=device)
-        feature[1024]=1
+        #feature=torch.zeros(1025)
+        feature[-1]=1
         #feature=torch.from_numpy(np.array(1024))
         for t in range(5000000):
             '''
@@ -73,7 +74,7 @@ def launch_scenarios(Wout):
             obs=torch.from_numpy(obs)
             obs=typedevice(obs,dtype,device)
             feature[:-1]=net.RCstep(obs.float(),0.5,1e-6)
-            feature=net.RCstep(obs.float(),0.5,1e-6)
+            #feature=net.RCstep(obs.float(),0.5,1e-6)
             reward_sum+=reward
             if done and t<998 and reward_sum > 900:
                 print("Episode finished after {} timesteps".format(t+1))

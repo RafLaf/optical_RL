@@ -56,10 +56,12 @@ def progtot():
     return(es)
 
 if __name__ == "__main__":
+    torch.cuda.set_device(torch.device('cuda:0'))
     dtype = torch.long
     #dtype = torch.cuda.FloatTensor
     device = 'cpu'
-    #device= torch.device('cuda')
+    #device= torch.device('cuda:0')
+    #device='cuda'
     try:
         W=np.load('W.npy',allow_pickle=True)
         print('loaded W')
@@ -91,8 +93,7 @@ if __name__ == "__main__":
         print('not found creating mu')
         mu=np.zeros(3*1025)
         np.save('mu.npy',mu)
-    utils.network.dtype=dtype
-    utils.game.dtype=dtype
+		
     utils.network.W=W
     #utils.game.env=env
     utils.game.net=net
