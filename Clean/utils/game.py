@@ -30,7 +30,7 @@ def launch_scenarios(Wout):
     global show
     Wout=np.reshape(Wout,(3,1025))
     Wout=torch.from_numpy(Wout)
-    Wout.type(dtype)
+    Wout=typedevice(Wout,dtype,device)
     reward_list=[]
     start_time = time.time()
     nbep=5
@@ -39,7 +39,7 @@ def launch_scenarios(Wout):
         observation = env.reset()
         #env.viewer.close()
         reward_sum=0
-        feature=torch.ones(1025,dtype=torch.float64)
+        feature=torch.ones(1025,dtype=dtype,device=device)
         for t in range(500):
             '''
             if  show==toshow:
@@ -47,7 +47,6 @@ def launch_scenarios(Wout):
                 show=0 #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
             else:
                 show+=1
-
             '''
             action=torch.clip(torch.matmul(Wout,feature),-1,1)
             action=action.detach().numpy()
@@ -56,7 +55,7 @@ def launch_scenarios(Wout):
             obs=np.moveaxis(obs,[2],[0])
             obs=np.array([obs])
             obs=torch.from_numpy(obs)
-            obs.type(dtype)
+            obs=typedevice(obs,dtype,device)
             feature[:-1]=net.RCstep(obs.float(),0.5,1e-6)
             reward_sum+=reward
             if done:
@@ -72,10 +71,15 @@ def launch_scenarios(Wout):
     #env.close()
     return -sum(reward_list)/nbep    #CMA es minimzes
 
+def typedevice(tensor,typ,devi):
+    return tensor.to(device=devi,dtype=typ)
+
 
 if __name__ == "__main__":
     dtype = torch.long
     #dtype = torch.cuda.FloatTensor
+    device = 'cpu'
+    #device= 'cuda'
     launch_scenarios.dtype=dtype
     try:
         W=np.load('W.npy',allow_pickle=True)
@@ -90,6 +94,7 @@ if __name__ == "__main__":
     env = gym.make('CarRacing-v0')
     from network import initnet
     import network
+    network.device=device
     network.W=W
     network.dtype=dtype
     net=initnet(0.9,dtype)

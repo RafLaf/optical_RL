@@ -17,6 +17,9 @@ dtype = torch.cuda.FloatTensor
 torch.device('cuda')
 
 
+def typedevice(tensor,typ,devi):
+    return tensor.to(device=devi,dtype=typ)
+
 
 def progtot():
     global dtype
@@ -27,8 +30,11 @@ def progtot():
     env1.close()
     return(es)
 
-
 if __name__ == "__main__":
+    dtype = torch.long
+    #dtype = torch.cuda.FloatTensor
+    device = 'cpu'
+    #device= 'cuda'
     env = gym.make('CarRacing-v0')
     try:
         W=np.load('W.npy',allow_pickle=True)
@@ -40,17 +46,21 @@ if __name__ == "__main__":
         W=(2*W-(W!=0))
         W=W.A
         np.save('W.npy',W)
+    utils.network.dtype=dtype
+    utils.game.dtype=dtype
+    utils.network.W=W
+    utils.game.env=env
+    utils.network.device=device
+    utils.game.device=device
     try :
         net = torch.load('model.pt')
         net.eval()
         print('loaded net')
     except FileNotFoundError:
         print('creating net')
-        net=initnet(0.9,dtype)
+        net=utils.network.initnet(0.9,dtype)
         torch.save(net, 'model.pt')
-    utils.network.dtype=dtype
-    utils.game.dtype=dtype
-    utils.network.W=W
-    utils.game.env=env
     utils.game.net=net
     progtot()
+
+
