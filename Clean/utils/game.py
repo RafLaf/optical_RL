@@ -88,7 +88,6 @@ def launch_scenarios(Wout):
         print("step number:",t)
         print("sum reward:",reward_sum)
         reward_list.append(reward_sum)
-    env.close()
     return -sum(reward_list)/nbep    #CMA es minimzes
 
 def typedevice(tensor,typ,devi):
@@ -98,7 +97,7 @@ def typedevice(tensor,typ,devi):
 if __name__ == "__main__":
     dtype = torch.long
     #dtype = torch.cuda.FloatTensor
-    device = 'cpu'
+    device = torch.device('cpu')
     #device= 'cuda'
     launch_scenarios.dtype=dtype
     try:

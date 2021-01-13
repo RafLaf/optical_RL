@@ -12,7 +12,9 @@ import utils.game
 import sys
 import os
 
-
+#dtype = torch.long
+dtype = torch.cuda.FloatTensor
+torch.device('cuda')
 
 
 def typedevice(tensor,typ,devi):
@@ -21,33 +23,38 @@ def typedevice(tensor,typ,devi):
 
 def progtot():
     global dtype
-    global mu
-    CMA=cma.evolution_strategy
-    sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.01,options={'ftarget':-50000,'maxiter':10,'popsize':2})
-    print(sol,es)
-    return(es)
+    global es
+    mu=np.zeros(3*1025)
+    es = cma.CMAEvolutionStrategy(mu, 0.2)
+    #es.optimize(utils.game.launch_scenarios)
+    #res = es.result
+    while not es.stop():
+        print('hey')
+        solutions = es.ask()
+        es.tell(solutions, [utils.game.launch_scenarios(s) for s in solutions])
+        es.disp()
+    return(es.result_pretty())
 
 if __name__ == "__main__":
-    torch.cuda.set_device(torch.device('cuda:0'))
     dtype = torch.long
     #dtype = torch.cuda.FloatTensor
-    device = torch.device('cpu')
-    #device= torch.device('cuda')
+    device = 'cpu'
+    #device= 'cuda'
     env = gym.make('CarRacing-v0')
     try:
         W=np.load('W.npy',allow_pickle=True)
         print('loaded W')
     except FileNotFoundError:
         print('not found creating W')
-        Nr,D=512,15
         W=sc.random(Nr,Nr,density=float(D/Nr))
-        W=0.9/max(abs(np.linalg.eigvals(W.A)))*W
+        W=rho/max(abs(np.linalg.eigvals(W.A)))*W
         W=(2*W-(W!=0))
         W=W.A
         np.save('W.npy',W)
     utils.network.dtype=dtype
     utils.game.dtype=dtype
     utils.network.W=W
+    utils.game.env=env
     utils.network.device=device
     utils.game.device=device
     try :
@@ -56,19 +63,10 @@ if __name__ == "__main__":
         print('loaded net')
     except FileNotFoundError:
         print('creating net')
-        net=utils.network.initnet(0.9,dtype,W)
+        net=utils.network.initnet(0.9,dtype)
         torch.save(net, 'model.pt')
-    try:
-        mu=np.load('mu.npy',allow_pickle=True)
-        print('loaded mu')
-    except FileNotFoundError:
-        print('not found creating mu')
-        mu=np.zeros(3*1025)
-        np.save('mu.npy',mu)
-		
-    utils.network.W=W
-    #utils.game.env=env
     utils.game.net=net
     progtot()
+    env.close()
 
 
