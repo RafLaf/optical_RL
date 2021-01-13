@@ -13,8 +13,8 @@ import sys
 import os
 
 #dtype = torch.long
-dtype = torch.cuda.FloatTensor
-torch.device('cuda')
+#dtype = torch.cuda.FloatTensor
+#torch.device('cuda')
 
 
 def typedevice(tensor,typ,devi):
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     dtype = torch.long
     #dtype = torch.cuda.FloatTensor
     device = 'cpu'
-    #device= 'cuda'
+    #device= torch.device('cuda')
     try:
         W=np.load('W.npy',allow_pickle=True)
         print('loaded W')
@@ -74,7 +74,6 @@ if __name__ == "__main__":
     utils.network.dtype=dtype
     utils.game.dtype=dtype
     utils.network.W=W
-    utils.game.env=env
     utils.network.device=device
     utils.game.device=device
     try :

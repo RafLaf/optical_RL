@@ -28,9 +28,9 @@ toshow=5
 def launch_scenarios(Wout):
     global dtype
     global show
-    #Wout=np.reshape(Wout,(3,1025))
-    #Wout=torch.from_numpy(Wout)
-    #Wout=typedevice(Wout,dtype,device)
+    Wout=np.reshape(Wout,(3,1025))
+    Wout=torch.from_numpy(Wout)
+    Wout=typedevice(Wout,dtype,device)
     reward_list=[]
     start_time = time.time()
     nbep=5
@@ -41,8 +41,9 @@ def launch_scenarios(Wout):
         observation = env.reset()
         #env.viewer.close()
         reward_sum=0
-        #feature=torch.ones(1025,dtype=dtype,device=device)
-        feature=torch.from_numpy(np.array(1024))
+        feature=torch.zeros(1025,dtype=dtype,device=device)
+        feature[1024]=1
+        #feature=torch.from_numpy(np.array(1024))
         for t in range(5000000):
             '''
             if  show==toshow:
@@ -57,13 +58,13 @@ def launch_scenarios(Wout):
                 
             
             
-            #action=torch.clip(torch.matmul(Wout,feature),-1,1)
-            #action=action.detach().numpy()
+            action=torch.clip(torch.matmul(Wout,feature),-1,1)
+            action=action.detach().numpy()
             
-            a1=max(min((np.sum(np.array(feature.detach().numpy())*Wout[0:1024])+Wout[1024]),1),-1)
-            a2=max(min((np.sum(np.array(feature.detach().numpy())*Wout[1025:2049])+Wout[2049]),1),-1)
-            a3=max(min((np.sum(np.array(feature.detach().numpy())*Wout[2050:3074])+Wout[3074]),1),-1)
-            action=[a1,a2,a3]
+            #a1=max(min((np.sum(np.array(feature.detach().numpy())*Wout[0:1024])+Wout[1024]),1),-1)
+            #a2=max(min((np.sum(np.array(feature.detach().numpy())*Wout[1025:2049])+Wout[2049]),1),-1)
+            #a3=max(min((np.sum(np.array(feature.detach().numpy())*Wout[2050:3074])+Wout[3074]),1),-1)
+            #action=[a1,a2,a3]
             
             observation, reward, done, info = env.step(action)
             obs=np.array(observation)
@@ -71,7 +72,7 @@ def launch_scenarios(Wout):
             obs=np.array([obs])
             obs=torch.from_numpy(obs)
             obs=typedevice(obs,dtype,device)
-            #feature[:-1]=net.RCstep(obs.float(),0.5,1e-6)
+            feature[:-1]=net.RCstep(obs.float(),0.5,1e-6)
             feature=net.RCstep(obs.float(),0.5,1e-6)
             reward_sum+=reward
             if done and t<998 and reward_sum > 900:
