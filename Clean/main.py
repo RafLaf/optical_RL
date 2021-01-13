@@ -18,11 +18,37 @@ torch.device('cuda')
 
 
 
-def progtot(mu):
+def progtot():
     global dtype
+    global mu
     CMA=cma.evolution_strategy
-    sol,es=CMA.fmin2(utils.game.launch_scenarios,mu,0.5,options={'ftarget':-50000,'maxiter':100000,'popsize':5})
-    print(sol,es)
+    
+    es = cma.CMAEvolutionStrategy(mu, 0.5,{'popsize':5,'ftarget':-50000,'maxiter':100000})
+    #es.opts.set({'popsize':5,'ftarget':-50000,'maxiter':100000})
+    iteration_number=0
+    while not es.stop():
+        iteration_number+=1
+        if iteration_number==1:
+            try:
+                C=np.load('C.npy',allow_pickle=True)
+                print('loaded C')
+                es.C=C
+            except FileNotFoundError:
+                C=es.C
+                np.save('C.npy',C)
+        Wout = es.ask()
+        print("len",len(Wout))
+        mu=es.mean
+        print("C",C)
+        print("mu",mu)
+        es.tell(Wout, [utils.game.launch_scenarios(Wouti) for Wouti in Wout])
+        es.disp()
+        np.save('W.npy',W)
+        np.save('mu.npy',mu)
+        np.save('C.npy',C)
+        print("\n \n NEW ITERATION \n \n")
+    #sol,es=CMA.fmin2(utils."game.launch_scenarios,mu,0.5,options={'ftarget':-50000,'maxiter':100000,'popsize':5})
+    #print(sol,es)
     env.close()
     return(es)
 
@@ -60,4 +86,4 @@ if __name__ == "__main__":
     utils.network.W=W
     #utils.game.env=env
     utils.game.net=net
-    progtot(mu)
+    progtot()

@@ -28,9 +28,9 @@ toshow=5
 def launch_scenarios(Wout):
     global dtype
     global show
-    Wout=np.reshape(Wout,(3,1025))
-    Wout=torch.from_numpy(Wout)
-    Wout.type(dtype)
+    #Wout=np.reshape(Wout,(3,1025))
+    #Wout=torch.from_numpy(Wout)
+    #Wout.type(dtype)
     reward_list=[]
     start_time = time.time()
     nbep=5
@@ -41,7 +41,8 @@ def launch_scenarios(Wout):
         observation = env.reset()
         #env.viewer.close()
         reward_sum=0
-        feature=torch.ones(1025,dtype=torch.float64)
+        #feature=torch.ones(1025,dtype=torch.float64)
+        feature=torch.from_numpy(np.array(1024))
         for t in range(5000000):
             '''
             if  show==toshow:
@@ -60,9 +61,9 @@ def launch_scenarios(Wout):
             #action=torch.clip(torch.matmul(Wout,feature),-1,1)
             #action=action.detach().numpy()
             
-            a1=max(min((np.sum(np.array(feature.detach().numpy())*Wout[0:1024])+Wout[1024])/1025,1),-1)
-            a2=max(min((np.sum(np.array(feature.detach().numpy())*Wout[1025:2049])+Wout[2049])/1025,1),-1)
-            a3=max(min((np.sum(np.array(feature.detach().numpy())*Wout[2050:3074])+Wout[3074])/1025,1),-1)
+            a1=max(min((np.sum(np.array(feature.detach().numpy())*Wout[0:1024])+Wout[1024]),1),-1)
+            a2=max(min((np.sum(np.array(feature.detach().numpy())*Wout[1025:2049])+Wout[2049]),1),-1)
+            a3=max(min((np.sum(np.array(feature.detach().numpy())*Wout[2050:3074])+Wout[3074]),1),-1)
             action=[a1,a2,a3]
             
             observation, reward, done, info = env.step(action)
@@ -71,7 +72,8 @@ def launch_scenarios(Wout):
             obs=np.array([obs])
             obs=torch.from_numpy(obs)
             obs.type(dtype)
-            feature[:-1]=net.RCstep(obs.float(),0.5,1e-6)
+            #feature[:-1]=net.RCstep(obs.float(),0.5,1e-6)
+            feature=net.RCstep(obs.float(),0.5,1e-6)
             reward_sum+=reward
             if done and t<998 and reward_sum > 900:
                 print("Episode finished after {} timesteps".format(t+1))
@@ -80,7 +82,9 @@ def launch_scenarios(Wout):
             if reward_sum > max_reward:
                 max_reward = reward_sum
             elif max_reward-reward_sum > 15:
+                reward_sum=reward_sum-(1000-t*0.1)
                 break
+        print("step number:",t)
         print("sum reward:",reward_sum)
         reward_list.append(reward_sum)
     env.close()
