@@ -38,6 +38,7 @@ def launch_scenarios(Wout):
     display=True
     env = gym.make('CarRacing-v0')
     for i_episode in range(nbep):
+        net.r=torch.zeros(512)
         observation = env.reset()
         #env.viewer.close()
         reward_sum=0
@@ -53,12 +54,9 @@ def launch_scenarios(Wout):
             else:
                 show+=1
             '''
-            
             if  i_episode==nbep-1 and display==True:
                 env.render()
-                
-            
-            
+
             action=torch.clip(torch.matmul(Wout,feature),-1,1)
             action=action.detach().numpy()
             
@@ -66,7 +64,6 @@ def launch_scenarios(Wout):
             #a2=max(min((np.sum(np.array(feature.detach().numpy())*Wout[1025:2049])+Wout[2049]),1),-1)
             #a3=max(min((np.sum(np.array(feature.detach().numpy())*Wout[2050:3074])+Wout[3074]),1),-1)
             #action=[a1,a2,a3]
-            
             observation, reward, done, info = env.step(action)
             obs=np.array(observation)
             obs=np.moveaxis(obs,[2],[0])
@@ -114,7 +111,5 @@ if __name__ == "__main__":
     from network import initnet
     import network
     network.device=device
-    network.W=W
-    network.dtype=dtype
-    net=initnet(0.9,dtype)
+    net=initnet(0.9,dtype,W)
     launch_scenarios(np.random.random(3*1025))

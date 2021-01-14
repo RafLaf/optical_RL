@@ -44,10 +44,7 @@ class Net(nn.Module):
         a=gamma*self.forward(x)
         v1=torch.matmul(self.r,self.W.float())
         v2=self.Win(a)
-        temp_r=(1-aleak)*self.r+aleak*torch.tanh(v1+v2)
-        self.r=temp_r.detach().clone()
-        self.r=torch.reshape(self.r,(512,))
-        a=torch.reshape(a,(512,))
+        self.r=(1-aleak)*self.r+aleak*torch.tanh(v1+v2)
         return torch.cat((self.r,a))
 
 if __name__ == "__main__":
@@ -59,7 +56,7 @@ if __name__ == "__main__":
         W=np.load('W.npy',allow_pickle=True)
         print('loaded W')
         rho=0.9
-        net=Net(rho,dtype)
+        net=Net(rho,dtype,W)
     except FileNotFoundError:
         rho=0.9
         Nr,D=512,15
@@ -67,7 +64,7 @@ if __name__ == "__main__":
         W=rho/max(abs(np.linalg.eigvals(W.A)))*W
         W=(2*W-(W!=0))
         W=W.A
-        net=Net(rho,dtype)
+        net=Net(rho,dtype,W)
         print('not found W creating W')
         np.save('W.npy',W)
     A=np.random.random((1,3,96,96))
