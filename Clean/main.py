@@ -30,7 +30,7 @@ def progtot():
     global dtype
     global mu
     CMA=cma.evolution_strategy
-    es = cma.CMAEvolutionStrategy(mu, 0.5,{'popsize':5,'ftarget':-50000,'maxiter':100000})
+    es = cma.CMAEvolutionStrategy(mu, 1,{'popsize':2,'ftarget':-50000,'maxiter':100000})
     #es.opts.set({'popsize':5,'ftarget':-50000,'maxiter':100000})
     iteration_number=0
     while not es.stop():
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         np.save('mu.npy',mu)
 		
     utils.network.W=W
-    #utils.game.env=env
+    utils.game.env=env
     utils.game.net=net
     progtot()
 
