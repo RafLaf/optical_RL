@@ -7,15 +7,17 @@ import numpy as np
 import scipy.sparse as sc
 import sys
 import os
-
+from lightonopu import OPU
 
 def initnet(rho,dtype):
     return Net(rho,dtype)
 
 class Net(nn.Module):
-    def __init__(self,rho,dtype):
+    def __init__(self,rho,dtype,W):
         super(Net, self).__init__()
         Nr,D=512,15
+        dbin=2000
+        self.opu= OPU(n_components=Nr)
         self.pool3 = nn.MaxPool2d(2, 2)
         self.pool3.type(dtype)
         self.conv1 = nn.Conv2d(3, 32, 5)              #convolution avec 3 channel entrée (RVB); 32 channel de sortie, kernel de 5*5 (pas sûr de moi pour le 5*5)
@@ -30,7 +32,9 @@ class Net(nn.Module):
         self.W=W
         self.W=torch.from_numpy(self.W)
         self.W.type(dtype)
-        self.r=torch.zeros(512)
+        self.r=torch.zeros(512,dtype=torch.uint8)
+        g=torch.ones((dbin,512),dtype=torch.uint8,device=device)/2
+        self.Wbin=2*torch.bernoulli(g)-1
     def forward(self, x):
         x=self.pool3(x)
         x = self.pool(self.conv1(x))
@@ -41,24 +45,25 @@ class Net(nn.Module):
         return x
     def RCstep(self,x,aleak,gamma):
         a=gamma*self.forward(x)
-        a.type(dtype)
         v1=torch.matmul(self.r,self.W.float())
         v2=self.Win(a)
-        temp_r=(1-aleak)*self.r+aleak*torch.tanh(v1+v2)
-        self.r=temp_r.detach().clone()
-        self.r=torch.reshape(self.r,(512,))
-        a=torch.reshape(a,(512,))
+        self.r=(1-aleak)*self.r+aleak*torch.tanh(v1+v2)
         return torch.cat((self.r,a))
-    def binarize(self,x):
+    def binarize(self,i):
         std,m=torch.std(x),torch.mean(x)
         h=(x-m)/std
-        h=torch.heaviside(h,h)
         h=h.type(dtype=torch.uint8)
-        return h
+        h2=torch.matmul(Wbin,h)
+        h3=torch.heaviside(h2,h2)
+        return h3
     def RCstepOPU(self,x,aleak,gamma):
         a=gamma*self.forward(x)
-        a=self.binarize(a)
-        transform_1d
+        b=self.binarize(a)
+        self.r=self.binarize(self.r)
+        v1=torch.cat((b,self.r))
+        self.r=self.opu.fit_transform1d(v1)
+        return torch.cat((self.r,a))
+        
 
 if __name__ == "__main__":
     dtype = torch.long

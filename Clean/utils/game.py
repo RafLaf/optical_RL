@@ -59,7 +59,8 @@ def launch_scenarios(Wout):
                 env.render()
             '''
             action=torch.clip(torch.matmul(Wout,feature),-1,1)
-            action=action.detach().numpy()
+            #erf ou 2sigmoid-1 ou tanh 
+            action=action.detach().cpu().numpy()
             
             #a1=max(min((np.sum(np.array(feature.detach().numpy())*Wout[0:1024])+Wout[1024]),1),-1)
             #a2=max(min((np.sum(np.array(feature.detach().numpy())*Wout[1025:2049])+Wout[2049]),1),-1)
