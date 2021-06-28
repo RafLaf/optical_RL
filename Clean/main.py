@@ -70,7 +70,8 @@ if __name__ == "__main__":
         print('loaded W')
     except FileNotFoundError:
         print('not found creating W')
-        Nr,D=512
+        Nr,D=512,10
+        rho=0.9
         W=sc.random(Nr,Nr,density=float(D/Nr))
         W=0.9/max(abs(np.linalg.eigvals(W.A)))*W
         W=(2*W-(W!=0))

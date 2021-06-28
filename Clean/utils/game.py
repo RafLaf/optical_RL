@@ -25,7 +25,7 @@ show=0
 toshow=5
 
 
-def launch_scenarios(Wout):
+def launch_scenarios(Wout,display=0):
     global dtype
     global show
     Wout=np.reshape(Wout,(3,1025))
@@ -35,7 +35,7 @@ def launch_scenarios(Wout):
     start_time = time.time()
     nbep=3
     max_reward=0
-    #display=True
+    
     net.r=torch.zeros(512)
     #env = gym.make('CarRacing-v0')
     for i_episode in range(nbep):
@@ -48,16 +48,13 @@ def launch_scenarios(Wout):
         feature[-1]=1
         #feature=torch.from_numpy(np.array(1024))
         for t in range(5000000):
-            '''
-            if  show==toshow:
+            if display==2:
                 env.render()
-                show=0 #pour que ce soit visible à l'écran il suffit de décommenter cette ligne -> ralentit tout considerablement. *4 computing time
-            else:
-                show+=1
-            
-            if  i_episode==nbep-1 and display==True:
-                env.render()
-            '''
+            if display==1:
+                if i_episode%3==0:
+                    env.render()
+            if display==0:
+                pass
             action=torch.clip(torch.matmul(Wout,feature),-1,1)
             #erf ou 2sigmoid-1 ou tanh 
             action=action.detach().cpu().numpy()
